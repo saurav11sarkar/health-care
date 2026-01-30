@@ -4,6 +4,7 @@ import 'dotenv/config';
 import config from './app/config';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
+import { UtilsInterceptor } from './app/utils/utils.interceptor';
 
 const port = config.port;
 
@@ -18,6 +19,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   );
+  app.useGlobalInterceptors(new UtilsInterceptor());
   await app.listen(port ?? 3000, () => {
     console.log(`Server is running on port http://localhost:${port}`);
   });
