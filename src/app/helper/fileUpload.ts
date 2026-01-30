@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-promise-reject-errors */
 import { memoryStorage } from 'multer';
 import streamifier from 'streamifier';
 import { v2 as cloudinary } from 'cloudinary';
