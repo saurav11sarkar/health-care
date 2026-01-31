@@ -34,4 +34,8 @@ export class CreateUserDto {
   @IsEnum(UserRole, { message: 'Invalid user role' })
   @IsOptional()
   role?: UserRole;
+
+  @IsString({ message: 'Profile photo must be a string' })
+  @IsOptional()
+  profilePhoto?: string;
 }

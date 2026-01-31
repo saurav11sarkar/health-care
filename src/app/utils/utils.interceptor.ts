@@ -25,8 +25,8 @@ export class UtilsInterceptor implements NestInterceptor {
             statusCode: res.statusCode,
             success: true,
             message: response.message ?? null,
-            meta: response.meta ?? null,
-            data: response.data ?? null,
+            meta: response.meta,
+            data: response.data,
             responseTime,
           };
         }

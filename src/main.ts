@@ -5,6 +5,7 @@ import config from './app/config';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { UtilsInterceptor } from './app/utils/utils.interceptor';
+import { HelperPipe } from './app/helper/helper.pipe';
 
 const port = config.port;
 
@@ -20,6 +21,7 @@ async function bootstrap() {
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   );
   app.useGlobalInterceptors(new UtilsInterceptor());
+  app.useGlobalPipes(new HelperPipe());
   await app.listen(port ?? 3000, () => {
     console.log(`Server is running on port http://localhost:${port}`);
   });

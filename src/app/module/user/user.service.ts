@@ -4,6 +4,7 @@ import { Prisma } from 'src/generated/prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 import bcrypt from 'bcrypt';
 import config from 'src/app/config';
+import { fileUpload } from 'src/app/helper/fileUpload';
 
 @Injectable()
 export class UserService {
@@ -11,6 +12,7 @@ export class UserService {
 
   async createPatient(
     createUserDto: CreateUserDto,
+    file?: Express.Multer.File,
   ): Promise<Prisma.UserCreateArgs['data']> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: createUserDto.email },
@@ -27,6 +29,13 @@ export class UserService {
       Number(config.bcryptSaltRounds),
     );
 
+    let profilePhotoUrl = createUserDto.profilePhoto;
+
+    if (file) {
+      const upload = await fileUpload.uploadToCloudinary(file);
+      profilePhotoUrl = upload.url;
+    }
+
     const result = await this.prisma.$transaction(async (tsx) => {
       const user = await tsx.user.create({
         data: {
@@ -39,6 +48,7 @@ export class UserService {
         data: {
           email: user.email,
           name: createUserDto.name,
+          profilePhoto: profilePhotoUrl,
         },
       });
       return user;
