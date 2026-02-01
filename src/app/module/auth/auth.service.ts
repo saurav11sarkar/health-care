@@ -18,7 +18,6 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
-    console.log(user);
     if (!user) throw new HttpException('Invalid credentials', 401);
 
     const veryfiedPassword = await bcrypt.compare(dto.password, user.password!);
