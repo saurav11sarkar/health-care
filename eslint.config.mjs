@@ -36,6 +36,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-call': 'off',
       'prefer-promise-reject-errors': 'off',
       '@typescript-eslint/prefer-promise-reject-errors': 'error',
+      '@typescript-eslint/no-namespace': 'off',
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },

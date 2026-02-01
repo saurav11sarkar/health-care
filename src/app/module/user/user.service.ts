@@ -61,4 +61,17 @@ export class UserService {
 
     return result;
   }
+
+  async profile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        patient: true,
+        doctor: true,
+        admin: true,
+      },
+    });
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    return user;
+  }
 }
