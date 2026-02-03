@@ -62,6 +62,101 @@ export class UserService {
     return result;
   }
 
+  async createAdmin(createUserDto: CreateUserDto, file?: Express.Multer.File) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: createUserDto.email },
+    });
+    if (existingUser) {
+      throw new HttpException(
+        'User with this email already exists',
+        HttpStatus.CONFLICT,
+      );
+    }
+    let profilePhotoUrl = createUserDto.profilePhoto;
+    if (file) {
+      const upload = await fileUpload.uploadToCloudinary(file);
+      profilePhotoUrl = upload.url;
+    }
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      Number(config.bcryptSaltRounds),
+    );
+
+    const result = await this.prisma.$transaction(async (tsx) => {
+      const user = await tsx.user.create({
+        data: {
+          email: createUserDto.email,
+          password: hashedPassword,
+          role: 'admin',
+        },
+      });
+      await tsx.admin.create({
+        data: {
+          email: user.email,
+          name: createUserDto.name,
+          profilePhoto: profilePhotoUrl,
+        },
+      });
+      return user;
+    });
+    if (!result)
+      throw new HttpException(
+        'User creation failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
+    return result;
+  }
+
+  async createDoctor(createUserDto: CreateUserDto, file?: Express.Multer.File) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: createUserDto.email },
+    });
+    if (existingUser) {
+      throw new HttpException(
+        'User with this email already exists',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    let profilePhotoUrl = createUserDto.profilePhoto;
+
+    if (file) {
+      const upload = await fileUpload.uploadToCloudinary(file);
+      profilePhotoUrl = upload.url;
+    }
+
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      Number(config.bcryptSaltRounds),
+    );
+
+    const result = await this.prisma.$transaction(async (tsx) => {
+      const user = await tsx.user.create({
+        data: {
+          email: createUserDto.email,
+          password: hashedPassword,
+          role: 'doctor',
+        },
+      });
+      await tsx.doctor.create({
+        data: {
+          email: user.email,
+          name: createUserDto.name,
+          profilePhoto: profilePhotoUrl,
+        },
+      });
+      return user;
+    });
+    if (!result)
+      throw new HttpException(
+        'User creation failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
+    return result;
+  }
+
   async profile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -73,5 +168,10 @@ export class UserService {
     });
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     return user;
+  }
+
+  async getAllUsers() {
+    const result = await this.prisma.user.findMany();
+    return result;
   }
 }

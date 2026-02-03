@@ -22,7 +22,7 @@ import type { Request } from 'express';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
+  @Post('patient')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('profilePhoto', fileUpload.uploadConfig))
   async createPatient(
@@ -36,13 +36,52 @@ export class UserController {
     };
   }
 
+  @Post('admin')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('profilePhoto', fileUpload.uploadConfig))
+  async createAdmin(
+    @ValidatedBody(CreateUserDto) dto: CreateUserDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    const result = await this.userService.createAdmin(dto, file);
+    return {
+      message: 'Admin created successfully',
+      data: result,
+    };
+  }
+
+  @Post('doctor')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('profilePhoto', fileUpload.uploadConfig))
+  async createDoctor(
+    @ValidatedBody(CreateUserDto) dto: CreateUserDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    const result = await this.userService.createDoctor(dto, file);
+    return {
+      message: 'Doctor created successfully',
+      data: result,
+    };
+  }
+
   @UseGuards(AuthGuard('admin', 'doctor', 'super_admin', 'patient'))
   @Get('profile')
+  @HttpCode(HttpStatus.OK)
   async profile(@Req() req: Request) {
     const userId = req.user?.id;
     const result = await this.userService.profile(userId!);
     return {
       message: 'Profile retrieved successfully',
+      data: result,
+    };
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async getAllUsers() {
+    const result = await this.userService.getAllUsers();
+    return {
+      message: 'Users retrieved successfully',
       data: result,
     };
   }
