@@ -17,6 +17,7 @@ import { fileUpload } from 'src/app/helper/fileUpload';
 import { ValidatedBody } from 'src/app/helper/validated.decorator';
 import { AuthGuard } from 'src/app/middlewares/auth.guard';
 import type { Request } from 'express';
+import pick from 'src/app/helper/pick';
 
 @Controller('user')
 export class UserController {
@@ -78,11 +79,14 @@ export class UserController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async getAllUsers() {
-    const result = await this.userService.getAllUsers();
+  async getAllUsers(@Req() req: Request) {
+    const filters = pick(req.query, ['searchTerm', 'status', 'email', 'role']);
+    const options = pick(req.query, ['page', 'limit', 'sortBy', 'sortOrder']);
+    const result = await this.userService.getAllUsers(filters, options);
     return {
       message: 'Users retrieved successfully',
-      data: result,
+      meta: result.meta,
+      data: result.data,
     };
   }
 }

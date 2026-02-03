@@ -5,6 +5,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import bcrypt from 'bcrypt';
 import config from 'src/app/config';
 import { fileUpload } from 'src/app/helper/fileUpload';
+import { IFilterParams } from 'src/app/helper/pick';
+import paginationHelper, { IOptions } from 'src/app/helper/pagenation';
 
 @Injectable()
 export class UserService {
@@ -170,8 +172,62 @@ export class UserService {
     return user;
   }
 
-  async getAllUsers() {
-    const result = await this.prisma.user.findMany();
-    return result;
+  async getAllUsers(params: IFilterParams, options: IOptions) {
+    const { searchTerm, ...filterData } = params;
+    const { page, limit, skip, sortBy, sortOrder } = paginationHelper(options);
+
+    const andConditions: Prisma.UserWhereInput[] = [];
+    const searchAbleFields = ['email'];
+    if (searchTerm) {
+      andConditions.push({
+        OR: searchAbleFields.map((field) => ({
+          [field]: { contains: searchTerm, mode: 'insensitive' },
+        })),
+      });
+    }
+
+    if (Object.keys(filterData).length) {
+      andConditions.push({
+        AND: Object.entries(filterData).map(([field, value]) => ({
+          [field]: { equals: value },
+        })),
+      });
+    }
+
+    const whereConditions: Prisma.UserWhereInput =
+      andConditions.length > 0 ? { AND: andConditions } : {};
+
+    const result = await this.prisma.user.findMany({
+      where: whereConditions,
+      skip: skip,
+      take: limit,
+      orderBy: { [sortBy]: sortOrder },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        patient: {
+          select: { name: true, profilePhoto: true },
+        },
+        doctor: {
+          select: { name: true, profilePhoto: true },
+        },
+        admin: {
+          select: { name: true, profilePhoto: true },
+        },
+      },
+    });
+    const total = await this.prisma.user.count({ where: whereConditions });
+    return {
+      meta: {
+        page,
+        limit,
+        total,
+      },
+      data: result,
+    };
   }
 }
