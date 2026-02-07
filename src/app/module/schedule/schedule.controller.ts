@@ -6,6 +6,8 @@ import {
   HttpStatus,
   Req,
   Get,
+  Param,
+  Delete,
 } from '@nestjs/common';
 import { ScheduleService } from './schedule.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
@@ -41,6 +43,16 @@ export class ScheduleController {
       message: 'Schedules retrieved successfully',
       meta: schedules.meta,
       data: schedules.data,
+    };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteSchedule(@Param('id') id: string) {
+    const schedule = await this.scheduleService.deleteSchedule(id);
+    return {
+      message: 'Schedule deleted successfully',
+      data: schedule,
     };
   }
 }

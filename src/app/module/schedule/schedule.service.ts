@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { addDays, addMinutes } from 'date-fns';
@@ -115,5 +115,11 @@ export class ScheduleService {
     const total = await this.prisma.schedule.count({ where: wheneCondition });
 
     return { data: result, meta: { total, page, limit } };
+  }
+
+  async deleteSchedule(id: string) {
+    const result = await this.prisma.schedule.delete({ where: { id } });
+    if (!result) throw new HttpException('Schedule not found', 404);
+    return result;
   }
 }
