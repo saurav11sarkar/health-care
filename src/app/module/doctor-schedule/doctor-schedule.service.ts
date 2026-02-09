@@ -1,26 +1,49 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateDoctorScheduleDto } from './dto/create-doctor-schedule.dto';
-import { UpdateDoctorScheduleDto } from './dto/update-doctor-schedule.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class DoctorScheduleService {
-  create(createDoctorScheduleDto: CreateDoctorScheduleDto) {
-    return 'This action adds a new doctorSchedule';
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return `This action returns all doctorSchedule`;
-  }
+  async createDoctorSchedule(
+    userId: string,
+    createDoctorScheduleDto: CreateDoctorScheduleDto,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) throw new NotFoundException('User not found');
 
-  findOne(id: number) {
-    return `This action returns a #${id} doctorSchedule`;
-  }
+    const doctor = await this.prisma.doctor.findUnique({
+      where: { email: user.email },
+    });
+    if (!doctor) throw new NotFoundException('Doctor profile not found');
 
-  update(id: number, updateDoctorScheduleDto: UpdateDoctorScheduleDto) {
-    return `This action updates a #${id} doctorSchedule`;
-  }
+    const existingSchedules = await this.prisma.schedule.findMany({
+      where: {
+        id: { in: createDoctorScheduleDto.scheduleIds },
+      },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} doctorSchedule`;
+    if (
+      existingSchedules.length !== createDoctorScheduleDto.scheduleIds.length
+    ) {
+      throw new NotFoundException('One or more schedules not found');
+    }
+
+    const doctorSchedules = createDoctorScheduleDto.scheduleIds.map(
+      (scheduleId) => ({
+        doctorId: doctor.id,
+        scheduleId,
+      }),
+    );
+
+    const result = await this.prisma.doctorSchedule.createMany({
+      data: doctorSchedules,
+      skipDuplicates: true,
+    });
+
+    return { user, doctorSchedules: result };
   }
 }

@@ -46,6 +46,13 @@ export class ScheduleController {
     };
   }
 
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  async getScheduleById(@Param('id') id: string) {
+    const schedule = await this.scheduleService.getScheduleById(id);
+    return { message: 'Schedule retrieved successfully', data: schedule };
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async deleteSchedule(@Param('id') id: string) {

@@ -117,6 +117,12 @@ export class ScheduleService {
     return { data: result, meta: { total, page, limit } };
   }
 
+  async getScheduleById(id: string) {
+    const schedule = await this.prisma.schedule.findUnique({ where: { id } });
+    if (!schedule) throw new HttpException('Schedule not found', 404);
+    return schedule;
+  }
+
   async deleteSchedule(id: string) {
     const result = await this.prisma.schedule.delete({ where: { id } });
     if (!result) throw new HttpException('Schedule not found', 404);
