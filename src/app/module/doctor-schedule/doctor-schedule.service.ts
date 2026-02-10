@@ -141,33 +141,46 @@ export class DoctorScheduleService {
   }
 
   async updateDoctorSchedule(
-    doctorId: string,
+    userId: string,
     scheduleId: string,
     updateData: UpdateDoctorScheduleDto,
   ) {
     const user = await this.prisma.user.findUnique({
-      where: { id: doctorId },
+      where: { id: userId },
     });
     if (!user) throw new NotFoundException('User not found');
+
     const doctor = await this.prisma.doctor.findUnique({
       where: { email: user.email },
     });
     if (!doctor) throw new NotFoundException('Doctor profile not found');
+
     const doctorSchedule = await this.prisma.doctorSchedule.findUnique({
       where: {
-        doctorId_scheduleId: { doctorId: doctor.id, scheduleId: scheduleId },
+        doctorId_scheduleId: {
+          doctorId: doctor.id,
+          scheduleId,
+        },
       },
     });
-    if (!doctorSchedule)
+
+    if (!doctorSchedule) {
       throw new NotFoundException('Doctor schedule not found');
+    }
 
     const result = await this.prisma.doctorSchedule.update({
       where: {
-        doctorId_scheduleId: { doctorId: doctor.id, scheduleId: scheduleId },
+        doctorId_scheduleId: {
+          doctorId: doctor.id,
+          scheduleId,
+        },
       },
       data: updateData as Prisma.DoctorScheduleUpdateInput,
-      include: { schedule: true },
+      include: {
+        schedule: true,
+      },
     });
+
     return result;
   }
 }

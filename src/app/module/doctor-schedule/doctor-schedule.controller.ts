@@ -6,12 +6,14 @@ import {
   Req,
   Get,
   Param,
+  Put,
 } from '@nestjs/common';
 import { DoctorScheduleService } from './doctor-schedule.service';
 import { CreateDoctorScheduleDto } from './dto/create-doctor-schedule.dto';
 import { AuthGuard } from 'src/app/middlewares/auth.guard';
 import type { Request } from 'express';
 import pick from 'src/app/helper/pick';
+import { UpdateDoctorScheduleDto } from './dto/update-doctor-schedule.dto';
 
 @Controller('doctor-schedule')
 export class DoctorScheduleController {
@@ -64,6 +66,25 @@ export class DoctorScheduleController {
     );
     return {
       message: 'Doctor schedule retrieved successfully',
+      data: result,
+    };
+  }
+
+  @Put(':id')
+  @UseGuards(AuthGuard('doctor'))
+  async updateDoctorSchedule(
+    @Param('id') id: string,
+    @Body() updateData: UpdateDoctorScheduleDto,
+    @Req() req: Request,
+  ) {
+    const doctorId = req.user!.id;
+    const result = await this.doctorScheduleService.updateDoctorSchedule(
+      doctorId,
+      id,
+      updateData,
+    );
+    return {
+      message: 'Doctor schedule updated successfully',
       data: result,
     };
   }
