@@ -128,4 +128,82 @@ export class ScheduleService {
     if (!result) throw new HttpException('Schedule not found', 404);
     return result;
   }
+
+  async getAvailableSchedules(
+    userId: string,
+    params: IFilterParams,
+    options: IOptions,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new HttpException('User not found', 404);
+
+    const doctor = await this.prisma.doctor.findUnique({
+      where: { email: user.email },
+    });
+
+    if (!doctor) throw new HttpException('Doctor not found', 404);
+
+    const { limit, page, skip, sortBy, sortOrder } = paginationHelper(options);
+    const {
+      searchTerm,
+      startDateTime: filterStartDateTime,
+      endDateTime: filterEndDateTime,
+      ...filterData
+    } = params;
+
+    const andConditions: Prisma.ScheduleWhereInput[] = [];
+    const searchableFields = ['startDateTime', 'endDateTime'];
+
+    if (searchTerm) {
+      andConditions.push({
+        OR: searchableFields.map((field) => ({
+          [field]: { contains: searchTerm, mode: 'insensitive' },
+        })),
+      });
+    }
+
+    if (filterStartDateTime && filterEndDateTime) {
+      andConditions.push({
+        AND: [
+          { startDateTime: { gte: filterStartDateTime } },
+          { endDateTime: { lte: filterEndDateTime } },
+        ],
+      });
+    }
+
+    if (Object.keys(filterData).length) {
+      andConditions.push({
+        AND: Object.entries(filterData).map(([field, value]) => ({
+          [field]: { equals: value },
+        })),
+      });
+    }
+
+    const wheneCondition: Prisma.ScheduleWhereInput = andConditions.length
+      ? { AND: andConditions }
+      : {};
+
+    const doctorSchedules = await this.prisma.doctorSchedule.findMany({
+      where: { doctorId: doctor.id },
+      select: { scheduleId: true },
+    });
+
+    const result = await this.prisma.schedule.findMany({
+      where: {
+        ...wheneCondition,
+        id: { notIn: doctorSchedules.map((ds) => ds.scheduleId) },
+      },
+      skip: skip,
+      take: limit,
+      orderBy: { [sortBy]: sortOrder },
+    });
+    const total = await this.prisma.schedule.count({
+      where: {
+        ...wheneCondition,
+        id: { notIn: doctorSchedules.map((ds) => ds.scheduleId) },
+      },
+    });
+
+    return { data: result, meta: { total, page, limit } };
+  }
 }

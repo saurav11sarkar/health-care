@@ -8,11 +8,13 @@ import {
   Get,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { ScheduleService } from './schedule.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import pick from 'src/app/helper/pick';
 import type { Request } from 'express';
+import { AuthGuard } from 'src/app/middlewares/auth.guard';
 
 @Controller('schedule')
 export class ScheduleController {
@@ -41,6 +43,29 @@ export class ScheduleController {
     );
     return {
       message: 'Schedules retrieved successfully',
+      meta: schedules.meta,
+      data: schedules.data,
+    };
+  }
+
+  @Get('available')
+  @UseGuards(AuthGuard('doctor'))
+  @HttpCode(HttpStatus.OK)
+  async getAvailableSchedules(@Req() req: Request) {
+    const filters = pick(req.query, [
+      'searchTerm',
+      'startDateTime',
+      'endDateTime',
+    ]);
+    const options = pick(req.query, ['page', 'limit', 'sortBy', 'sortOrder']);
+    const userId = req.user!.id;
+    const schedules = await this.scheduleService.getAvailableSchedules(
+      userId,
+      filters,
+      options,
+    );
+    return {
+      message: 'Available schedules retrieved successfully',
       meta: schedules.meta,
       data: schedules.data,
     };
