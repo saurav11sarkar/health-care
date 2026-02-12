@@ -135,7 +135,7 @@ export class MiddlewaresFilter<T> implements ExceptionFilter {
     response.status(statusCode).json({
       success: false,
       statusCode,
-      path: request.url,
+      // path: request.url,
       message,
       errorSources,
     });
