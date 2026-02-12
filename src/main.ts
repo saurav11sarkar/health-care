@@ -19,7 +19,10 @@ async function bootstrap() {
   });
   app.use(cookieParser());
   app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
   );
   app.useGlobalInterceptors(new UtilsInterceptor());
   app.useGlobalPipes(new HelperPipe());

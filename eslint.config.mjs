@@ -37,6 +37,7 @@ export default tseslint.config(
       'prefer-promise-reject-errors': 'off',
       '@typescript-eslint/prefer-promise-reject-errors': 'error',
       '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       'prettier/prettier': ['error', { endOfLine: 'auto' }],

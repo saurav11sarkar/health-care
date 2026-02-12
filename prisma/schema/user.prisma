@@ -44,10 +44,11 @@ model Doctor {
     designation       String?
     isDeleted         Boolean @default(false)
 
-    user            User             @relation(fields: [email], references: [email])
-    doctorSchedules DoctorSchedule[]
-    createdAt       DateTime         @default(now())
-    updatedAt       DateTime         @updatedAt
+    user             User               @relation(fields: [email], references: [email])
+    doctorSchedules  DoctorSchedule[]
+    doctorSpecialies DoctorSpecialies[]
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime           @updatedAt
 
     @@map("doctors")
 }

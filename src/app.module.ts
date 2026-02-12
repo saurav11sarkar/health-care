@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './app/module/auth/auth.module';
 import { ScheduleModule } from './app/module/schedule/schedule.module';
 import { DoctorScheduleModule } from './app/module/doctor-schedule/doctor-schedule.module';
+import { SpecialtiesModule } from './app/module/specialties/specialties.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { DoctorScheduleModule } from './app/module/doctor-schedule/doctor-schedu
     AuthModule,
     ScheduleModule,
     DoctorScheduleModule,
+    SpecialtiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
