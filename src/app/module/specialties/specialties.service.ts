@@ -1,13 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { CreateSpecialtyDto } from './dto/create-specialty.dto';
-import { UpdateSpecialtyDto } from './dto/update-specialty.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { fileUpload } from 'src/app/helper/fileUpload';
+import { Specialties } from 'src/generated/prisma/client';
 
 @Injectable()
 export class SpecialtiesService {
   constructor(private prisma: PrismaService) {}
 
-  async createSpecialties(createSpecialtyDto: any) {
+  async createSpecialties(
+    createSpecialtyDto: CreateSpecialtyDto,
+    file?: Express.Multer.File,
+  ) {
+    if (file) {
+      const iconFile = await fileUpload.uploadToCloudinary(file);
+      createSpecialtyDto.icon = iconFile.url;
+    }
     const result = await this.prisma.specialties.create({
       data: createSpecialtyDto,
     });
@@ -15,19 +23,20 @@ export class SpecialtiesService {
     return result;
   }
 
-  findAll() {
-    return `This action returns all specialties`;
+  async getAllSpecialties(): Promise<Specialties[]> {
+    const result = await this.prisma.specialties.findMany({});
+    return result;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} specialty`;
+  async findOneSpecialty(id: string): Promise<Specialties | null> {
+    const result = await this.prisma.specialties.findUnique({ where: { id } });
+    if (!result) throw new HttpException('Specialty not found', 404);
+    return result;
   }
 
-  update(id: number, updateSpecialtyDto: UpdateSpecialtyDto) {
-    return `This action updates a #${id} specialty`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} specialty`;
+  async deleteSpecialty(id: string) {
+    const result = await this.prisma.specialties.delete({ where: { id } });
+    if (!result) throw new HttpException('Specialty not found', 404);
+    return result;
   }
 }

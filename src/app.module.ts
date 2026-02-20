@@ -8,6 +8,7 @@ import { AuthModule } from './app/module/auth/auth.module';
 import { ScheduleModule } from './app/module/schedule/schedule.module';
 import { DoctorScheduleModule } from './app/module/doctor-schedule/doctor-schedule.module';
 import { SpecialtiesModule } from './app/module/specialties/specialties.module';
+import { DoctorModule } from './app/module/doctor/doctor.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SpecialtiesModule } from './app/module/specialties/specialties.module';
     ScheduleModule,
     DoctorScheduleModule,
     SpecialtiesModule,
+    DoctorModule,
   ],
   controllers: [AppController],
   providers: [AppService],
