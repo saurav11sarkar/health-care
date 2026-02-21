@@ -1,34 +1,36 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Req } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
-import { CreateDoctorDto } from './dto/create-doctor.dto';
-import { UpdateDoctorDto } from './dto/update-doctor.dto';
+
+import type { Request } from 'express';
+import pick from 'src/app/helper/pick';
 
 @Controller('doctor')
 export class DoctorController {
   constructor(private readonly doctorService: DoctorService) {}
 
-  @Post()
-  create(@Body() createDoctorDto: CreateDoctorDto) {
-    return this.doctorService.create(createDoctorDto);
-  }
-
   @Get()
-  findAll() {
-    return this.doctorService.findAll();
-  }
+  @HttpCode(HttpStatus.OK)
+  async getAllDoctors(@Req() req: Request) {
+    const filters = pick(req.query, [
+      'searchTerm',
+      'name',
+      'email',
+      'contactNumber',
+      'address',
+      'registationNumber',
+      'gender',
+      'qualification',
+      'currentWorkPlace',
+      'designation',
+      'doctorSpecialies',
+    ]);
+    const options = pick(req.query, ['page', 'limit', 'sortBy', 'sortOrder']);
+    const result = await this.doctorService.getAllDoctors(filters, options);
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.doctorService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDoctorDto: UpdateDoctorDto) {
-    return this.doctorService.update(+id, updateDoctorDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.doctorService.remove(+id);
+    return {
+      message: 'Doctors retrieved successfully',
+      meta: result.meta,
+      data: result.data,
+    };
   }
 }

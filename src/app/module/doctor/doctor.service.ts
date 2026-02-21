@@ -1,26 +1,66 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDoctorDto } from './dto/create-doctor.dto';
-import { UpdateDoctorDto } from './dto/update-doctor.dto';
+import paginationHelper, { IOptions } from 'src/app/helper/pagenation';
+import { IFilterParams } from 'src/app/helper/pick';
+import { Prisma } from 'src/generated/prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class DoctorService {
-  create(createDoctorDto: CreateDoctorDto) {
-    return 'This action adds a new doctor';
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return `This action returns all doctor`;
-  }
+  async getAllDoctors(params: IFilterParams, options: IOptions) {
+    const { limit, page, skip, sortBy, sortOrder } = paginationHelper(options);
+    const { searchTerm, ...filterData } = params;
 
-  findOne(id: number) {
-    return `This action returns a #${id} doctor`;
-  }
+    const andConditions: Prisma.DoctorWhereInput[] = [];
+    const searchableFields = [
+      'name',
+      'email',
+      'contactNumber',
+      'address',
+      'registationNumber',
+      'gender',
+      'qualification',
+      'currentWorkPlace',
+      'designation',
+      'doctorSpecialies',
+    ];
 
-  update(id: number, updateDoctorDto: UpdateDoctorDto) {
-    return `This action updates a #${id} doctor`;
-  }
+    if (searchTerm) {
+      andConditions.push({
+        OR: searchableFields.map((field) => ({
+          [field]: { contains: searchTerm, mode: 'insensitive' },
+        })),
+      });
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} doctor`;
+    if (Object.keys(filterData).length) {
+      andConditions.push({
+        AND: Object.entries(filterData).map(([field, value]) => ({
+          [field]: { equals: value },
+        })),
+      });
+    }
+
+    const whereConditions: Prisma.DoctorWhereInput =
+      andConditions.length > 0 ? { AND: andConditions } : {};
+
+    const result = await this.prisma.doctor.findMany({
+      where: whereConditions,
+      skip: skip,
+      take: limit,
+      orderBy: { [sortBy]: sortOrder },
+    });
+
+    const total = await this.prisma.doctor.count({ where: whereConditions });
+
+    return {
+      data: result,
+      meta: {
+        total,
+        page,
+        limit,
+      },
+    };
   }
 }
